@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whispering Numbers Card Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            background-color: #3498db;
+            transition: background-color 0.3s ease;
+            width: 140px;
+            display: inline-block;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .reset-btn {
+            background-color: #e74c3c;
+            width: 140px;
+        }
+        .reset-btn:hover {
+            background-color: #c0392b;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fafafa;
+            width: 350px;
+        }
+        .tree-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            transition: transform 0.3s ease;
+        }
+        .tree-image:hover {
+            transform: scale(1.1);
+        }
+        .game-area {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        .info-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .status-box, .result-box {
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            font-size: 18px;
+            width: 400px;
+            text-align: center;
+            white-space: nowrap;
+            margin-bottom: 5px;
+        }
+        .winner {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 10px;
+            border: 2px solid #e74c3c;
+            background-color: #f9ebeb;
+            width: 400px;
+            margin-top: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .player-btns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Whispering Numbers Card Game</h1>
+
+<div class="game-area">
+    <!-- Left Section: Tree and Buttons -->
+    <div class="container">
+        <img src="https://media.gettyimages.com/id/166927409/photo/a-devotee-rubs-a-takian-tree-with-oil-hoping-to-find-the-winning-lottery-numbers-supposed-to.jpg?s=612x612&w=gi&k=20&c=VGxg0wMqHFCFrCfMieh9ucrGpb5rXZ1W5MEI2-RpBJU=" class="tree-image" alt="Tree Image">
+        <button onclick="generateLottery()">Rub once</button>
+        <button onclick="resetGame()" class="reset-btn">Reset</button>
+    </div>
+
+    <!-- Right Section: Game Info -->
+    <div class="info-area">
+        <div class="status-box" id="currentRound">
+            Round 1 | Number: - | Reward: -
+        </div>
+
+        <div class="result-box">
+            Round Winner:
+            <div class="player-btns">
+                <button id="player1Btn" onclick="setWinner(1)">Player 1</button>
+                <button id="player2Btn" onclick="setWinner(2)">Player 2</button>
+            </div>
+        </div>
+
+        <div class="result-box">
+            Total Rewards:<br>
+            Player 1 : <span id="player1Score">0</span> baht<br>
+            Player 2 : <span id="player2Score">0</span> baht
+        </div>
+
+        <div id="finalResult" class="winner" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+    let round = 1;
+    const maxRounds = 15;
+    let player1Score = 0;
+    let player2Score = 0;
+    let currentReward = 0;
+    let currentNumber = "";
+    let waitingForWinner = false;
+    let gameEnded = false;
+
+    function generateUniqueDigits(length) {
+        let digits = [];
+        while (digits.length < length) {
+            let digit = Math.floor(Math.random() * 10);
+            if (!digits.includes(digit)) {
+                digits.push(digit);
+            }
+        }
+        return digits.join('');
+    }
+
+    function generateReward(category) {
+        if (category === "2-Digit") {
+            return [1000, 1500, 2000][Math.floor(Math.random() * 3)];
+        } else {
+            return [2500, 3000, 3500][Math.floor(Math.random() * 3)];
+        }
+    }
+
+    function generateLottery() {
+        if (round > maxRounds || waitingForWinner || gameEnded) return;
+
+        let category = Math.random() < 0.7 ? "2-Digit" : "3-Digit";
+        currentNumber = generateUniqueDigits(category === "2-Digit" ? 2 : 3);
+        currentReward = generateReward(category);
+
+        document.getElementById('currentRound').innerText = 
+            `Round ${round} | Number: ${currentNumber} | Reward: ${currentReward}`;
+
+        waitingForWinner = true;
+    }
+
+    function setWinner(player) {
+        if (!waitingForWinner || gameEnded) return;
+
+        if (player === 1) {
+            player1Score += currentReward;
+            document.getElementById('player1Score').innerText = player1Score;
+        } else {
+            player2Score += currentReward;
+            document.getElementById('player2Score').innerText = player2Score;
+        }
+
+        if (round === maxRounds) {
+            endGame();
+        } else {
+            round++;
+            waitingForWinner = false;
+        }
+    }
+
+    function endGame() {
+        let winner = player1Score > player2Score ? "Player 1" : "Player 2";
+        let winnerScore = Math.max(player1Score, player2Score);
+        document.getElementById('finalResult').innerHTML = 
+            `🏆 The game has ended!<br>🎉 Congrats! ${winner} is the winner with ${winnerScore} baht!`;
+        document.getElementById('finalResult').style.display = 'block';
+        gameEnded = true;
+    }
+
+    function resetGame() {
+        round = 1;
+        player1Score = 0;
+        player2Score = 0;
+        gameEnded = false;
+        waitingForWinner = false;
+        document.getElementById('player1Score').innerText = 0;
+        document.getElementById('player2Score').innerText = 0;
+        document.getElementById('finalResult').style.display = 'none';
+        document.getElementById('currentRound').innerText = 
+            `Round 1 | Number: - | Reward: -`;
+    }
+</script>
+
+</body>
+</html>
