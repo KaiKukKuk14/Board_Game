@@ -103,11 +103,25 @@
             justify-content: center;
             gap: 10px;
         }
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            width: 120px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
 <h1>Whispering Numbers Card Game</h1>
+
+<!-- Input for number of rounds -->
+<div>
+    <label for="roundInput">Number of Rounds:</label>
+    <input type="number" id="roundInput" value="15" min="1" max="100" />
+</div>
 
 <div class="game-area">
     <!-- Left Section: Tree and Buttons -->
@@ -143,7 +157,7 @@
 
 <script>
     let round = 1;
-    const maxRounds = 15;
+    let maxRounds = 15;
     let player1Score = 0;
     let player2Score = 0;
     let currentReward = 0;
@@ -171,16 +185,24 @@
     }
 
     function generateLottery() {
-        if (round > maxRounds || waitingForWinner || gameEnded) return;
+        if (round > maxRounds || gameEnded) return;
 
-        let category = Math.random() < 0.7 ? "2-Digit" : "3-Digit";
-        currentNumber = generateUniqueDigits(category === "2-Digit" ? 2 : 3);
-        currentReward = generateReward(category);
-
-        document.getElementById('currentRound').innerText = 
-            `Round ${round} | Number: ${currentNumber} | Reward: ${currentReward}`;
-
-        waitingForWinner = true;
+        if (waitingForWinner) {
+            if (currentReward <= 2000) {
+                currentNumber = generateUniqueDigits(2);
+            } else {
+                currentNumber = generateUniqueDigits(3);
+            }
+            document.getElementById('currentRound').innerText = 
+                `Round ${round} | Number: ${currentNumber} | Reward: ${currentReward}`;
+        } else {
+            let category = Math.random() < 0.7 ? "2-Digit" : "3-Digit";
+            currentNumber = generateUniqueDigits(category === "2-Digit" ? 2 : 3);
+            currentReward = generateReward(category);
+            document.getElementById('currentRound').innerText = 
+                `Round ${round} | Number: ${currentNumber} | Reward: ${currentReward}`;
+            waitingForWinner = true;
+        }
     }
 
     function setWinner(player) {
@@ -213,15 +235,13 @@
 
     function resetGame() {
         round = 1;
+        maxRounds = parseInt(document.getElementById('roundInput').value);
         player1Score = 0;
         player2Score = 0;
         gameEnded = false;
         waitingForWinner = false;
-        document.getElementById('player1Score').innerText = 0;
-        document.getElementById('player2Score').innerText = 0;
         document.getElementById('finalResult').style.display = 'none';
-        document.getElementById('currentRound').innerText = 
-            `Round 1 | Number: - | Reward: -`;
+        document.getElementById('currentRound').innerText = `Round 1 | Number: - | Reward: -`;
     }
 </script>
 
