@@ -39,6 +39,12 @@
         .reset-btn:hover {
             background-color: #c0392b;
         }
+        .reveal-btn {
+            background-color: #27ae60;
+        }
+        .reveal-btn:hover {
+            background-color: #219150;
+        }
         .container {
             display: flex;
             flex-direction: column;
@@ -86,6 +92,27 @@
             white-space: nowrap;
             margin-bottom: 5px;
         }
+        .number-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .digit-box {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            border-radius: 5px;
+            background-color: #fff;
+        }
         .winner {
             color: #e74c3c;
             font-weight: bold;
@@ -97,19 +124,12 @@
             margin-top: 10px;
             border-radius: 10px;
             text-align: center;
+            display: none;
         }
         .player-btns {
             display: flex;
             justify-content: center;
             gap: 10px;
-        }
-        input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            width: 120px;
-            text-align: center;
         }
     </style>
 </head>
@@ -117,41 +137,38 @@
 
 <h1>Whispering Numbers Card Game</h1>
 
-<!-- Input for number of rounds -->
-<div>
-    <label for="roundInput">Number of Rounds:</label>
-    <input type="number" id="roundInput" value="15" min="1" max="100" />
-</div>
-
 <div class="game-area">
     <!-- Left Section: Tree and Buttons -->
     <div class="container">
         <img src="https://media.gettyimages.com/id/166927409/photo/a-devotee-rubs-a-takian-tree-with-oil-hoping-to-find-the-winning-lottery-numbers-supposed-to.jpg?s=612x612&w=gi&k=20&c=VGxg0wMqHFCFrCfMieh9ucrGpb5rXZ1W5MEI2-RpBJU=" class="tree-image" alt="Tree Image">
-        <button onclick="generateLottery()">Rub once</button>
+        <button onclick="revealDigits()" class="reveal-btn" id="revealBtn">Reveal Digit</button>
+        <button onclick="generateLottery()" id="rubBtn" disabled>Rub once</button>
         <button onclick="resetGame()" class="reset-btn">Reset</button>
     </div>
 
     <!-- Right Section: Game Info -->
     <div class="info-area">
-        <div class="status-box" id="currentRound">
-            Round 1 | Number: - | Reward: -
+        <div class="status-box" id="currentRound">Round 1</div>
+        <div class="status-box" id="digitInfo">Lottery digit: - | Reward: -</div>
+        <div class="number-container" id="numberDisplay">
+            Holy number:
+            <div class="digit-box">_</div>
+            <div class="digit-box">_</div>
+            <div class="digit-box">_</div>
         </div>
-
         <div class="result-box">
             Round Winner:
             <div class="player-btns">
-                <button id="player1Btn" onclick="setWinner(1)">Player 1</button>
-                <button id="player2Btn" onclick="setWinner(2)">Player 2</button>
+                <button onclick="setWinner(1)" id="player1Btn">Player 1</button>
+                <button onclick="setWinner(2)" id="player2Btn">Player 2</button>
             </div>
         </div>
-
         <div class="result-box">
             Total Rewards:<br>
             Player 1 : <span id="player1Score">0</span> baht<br>
             Player 2 : <span id="player2Score">0</span> baht
         </div>
-
-        <div id="finalResult" class="winner" style="display: none;"></div>
+        <div id="finalResult" class="winner"></div>
     </div>
 </div>
 
@@ -161,87 +178,58 @@
     let player1Score = 0;
     let player2Score = 0;
     let currentReward = 0;
-    let currentNumber = "";
     let waitingForWinner = false;
     let gameEnded = false;
 
-    function generateUniqueDigits(length) {
-        let digits = [];
-        while (digits.length < length) {
-            let digit = Math.floor(Math.random() * 10);
-            if (!digits.includes(digit)) {
-                digits.push(digit);
-            }
-        }
-        return digits.join('');
-    }
+    function revealDigits() {
+        if (gameEnded) return;
 
-    function generateReward(category) {
-        if (category === "2-Digit") {
-            return [1000, 1500, 2000][Math.floor(Math.random() * 3)];
-        } else {
-            return [2500, 3000, 3500][Math.floor(Math.random() * 3)];
-        }
+        let category = Math.random() < 0.7 ? "2-Digit" : "3-Digit";
+        currentReward = category === "2-Digit" ? 1000 : 2500;
+
+        document.getElementById('digitInfo').innerText = `Lottery digit: ${category} | Reward: ${currentReward}`;
+        document.getElementById('rubBtn').disabled = false;
+        waitingForWinner = true;
     }
 
     function generateLottery() {
-        if (round > maxRounds || gameEnded) return;
+        if (gameEnded || !waitingForWinner) return;
 
-        if (waitingForWinner) {
-            if (currentReward <= 2000) {
-                currentNumber = generateUniqueDigits(2);
-            } else {
-                currentNumber = generateUniqueDigits(3);
-            }
-            document.getElementById('currentRound').innerText = 
-                `Round ${round} | Number: ${currentNumber} | Reward: ${currentReward}`;
-        } else {
-            let category = Math.random() < 0.7 ? "2-Digit" : "3-Digit";
-            currentNumber = generateUniqueDigits(category === "2-Digit" ? 2 : 3);
-            currentReward = generateReward(category);
-            document.getElementById('currentRound').innerText = 
-                `Round ${round} | Number: ${currentNumber} | Reward: ${currentReward}`;
-            waitingForWinner = true;
-        }
+        let length = currentReward <= 2000 ? 2 : 3;
+        let number = [...Array(length)].map(() => Math.floor(Math.random() * 10)).join('');
+
+        document.querySelectorAll('.digit-box').forEach((box, i) => {
+            box.innerText = number[i] || "_";
+        });
     }
 
     function setWinner(player) {
         if (!waitingForWinner || gameEnded) return;
 
-        if (player === 1) {
-            player1Score += currentReward;
-            document.getElementById('player1Score').innerText = player1Score;
-        } else {
-            player2Score += currentReward;
-            document.getElementById('player2Score').innerText = player2Score;
-        }
+        if (player === 1) player1Score += currentReward;
+        if (player === 2) player2Score += currentReward;
 
-        if (round === maxRounds) {
-            endGame();
-        } else {
-            round++;
-            waitingForWinner = false;
-        }
-    }
+        document.getElementById('player1Score').innerText = player1Score;
+        document.getElementById('player2Score').innerText = player2Score;
 
-    function endGame() {
-        let winner = player1Score > player2Score ? "Player 1" : "Player 2";
-        let winnerScore = Math.max(player1Score, player2Score);
-        document.getElementById('finalResult').innerHTML = 
-            `🏆 The game has ended!<br>🎉 Congrats! ${winner} is the winner with ${winnerScore} baht!`;
-        document.getElementById('finalResult').style.display = 'block';
-        gameEnded = true;
+        round++;
+        if (round > maxRounds) {
+            gameEnded = true;
+            let winner = player1Score > player2Score ? "Player 1" : "Player 2";
+            let winnerScore = Math.max(player1Score, player2Score);
+            document.getElementById('finalResult').innerHTML = `🏆 The game has ended!<br>🎉 Congrats! ${winner} is the winner with ${winnerScore} baht!`;
+            document.getElementById('finalResult').style.display = 'block';
+        } else {
+            document.getElementById('currentRound').innerText = `Round ${round}`;
+            document.getElementById('digitInfo').innerText = "Lottery digit: - | Reward: -";
+            document.querySelectorAll('.digit-box').forEach(box => box.innerText = "_");
+        }
+        waitingForWinner = false;
+        document.getElementById('rubBtn').disabled = true;
     }
 
     function resetGame() {
-        round = 1;
-        maxRounds = parseInt(document.getElementById('roundInput').value);
-        player1Score = 0;
-        player2Score = 0;
-        gameEnded = false;
-        waitingForWinner = false;
-        document.getElementById('finalResult').style.display = 'none';
-        document.getElementById('currentRound').innerText = `Round 1 | Number: - | Reward: -`;
+        location.reload();
     }
 </script>
 
